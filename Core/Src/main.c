@@ -18,10 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "lcd16x2_i2c.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "AMG8833.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,12 +57,8 @@ static void MX_I2C2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-uint8_t deviceAddress = 0x00;
-uint8_t i2cBuf[8];
-uint16_t ThermistorValue = 0x00;
-uint16_t Data[128];
-float temperatureThermistor;
+uint8_t AMG8833_ADDR;
+amg8833_temperature_table_t vec;
 /* USER CODE END 0 */
 
 /**
@@ -96,128 +92,14 @@ int main(void)
   MX_I2C1_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-
-
-	// Prepare for LCD
-	if(lcd16x2_i2c_init(&hi2c1)){
-		lcd16x2_i2c_clear();
-	}
-	
-	// Mencari Address I2C
-	for(uint8_t i = 0; i <255; i++){
-		if(HAL_I2C_IsDeviceReady(&hi2c2, i, 1, 10) == HAL_OK){
-			lcd16x2_i2c_printf("Address 0X%x",i);
-			deviceAddress = i;
-			break;
-		}
-	}
-	if(deviceAddress == 0x00){
-		lcd16x2_i2c_printf("Device not Found!");
-	}
-	
-	// 1. Power Control Register -> Normal Mode
-	i2cBuf[0] = 0x00;
-	i2cBuf[1] = 0x00;
-	HAL_I2C_Master_Transmit(&hi2c2, deviceAddress, i2cBuf, 2, HAL_MAX_DELAY);
-	
-	// 2. Reset Device
-	i2cBuf[0] = 0x01;
-	i2cBuf[1] = 0x3F;
-	HAL_I2C_Master_Transmit(&hi2c2, deviceAddress, i2cBuf, 2, HAL_MAX_DELAY);
-	
-	// 3. Set Frame Rate -> 10FPS (0x00) | 1FPS (0x01)
-	i2cBuf[0] = 0x02;
-	i2cBuf[1] = 0x00;
-	HAL_I2C_Master_Transmit(&hi2c2, deviceAddress, i2cBuf, 2, HAL_MAX_DELAY);
-	
-	// 4. Read Thermistor
-	
-		i2cBuf[0] = 0x0E;
-		HAL_I2C_Master_Transmit(&hi2c2, deviceAddress, i2cBuf, 1, 10);
-		i2cBuf[1] = 0x00;
-		HAL_I2C_Master_Receive(&hi2c2, deviceAddress, &i2cBuf[1], 1, 10);
-		lcd16x2_i2c_clear();
-		lcd16x2_i2c_printf("T1: 0X%x",i2cBuf[1]);
-		ThermistorValue = (i2cBuf[1]);
-		
-		i2cBuf[0] = 0x0F;
-		HAL_I2C_Master_Transmit(&hi2c2, deviceAddress, i2cBuf, 1, 10);
-		i2cBuf[1] = 0x00;
-		HAL_I2C_Master_Receive(&hi2c2, deviceAddress, &i2cBuf[1], 1, 10);
-		lcd16x2_i2c_setCursor(0,9);
-		lcd16x2_i2c_printf("T2: 0X%x",i2cBuf[1]);
-		ThermistorValue |= (i2cBuf[1] << 8);
-		
-		// Convert TO Float
-		temperatureThermistor = ThermistorValue*0.0625;
-		lcd16x2_i2c_setCursor(1,0);
-		lcd16x2_i2c_printf("Th: %.2f",temperatureThermistor);
-		HAL_Delay(100);
-
-	// 5. Interrupt Control Register ->Absolute Value(x1) | Difference Value (x0) | Output Active (1x) | Output Reactive (0x)
-		i2cBuf[0] = 0x03;
-		i2cBuf[1] = 0x03;
-		HAL_I2C_Master_Transmit(&hi2c2, deviceAddress, i2cBuf, 2, HAL_MAX_DELAY);
-	
-	// 6. Reading Status
-		i2cBuf[0] = 0x04;
-		HAL_I2C_Master_Transmit(&hi2c2, deviceAddress, i2cBuf, 1, 10);
-		i2cBuf[1] = 0x00;
-		HAL_I2C_Master_Receive(&hi2c2, deviceAddress, &i2cBuf[1], 1, 10);
-		if(i2cBuf[1] == 0){
-			lcd16x2_i2c_clear();
-			lcd16x2_i2c_printf("Loading");
-		}
-		else{
-			lcd16x2_i2c_clear();
-			lcd16x2_i2c_printf("Error (Overflow)");
-		}
-		HAL_Delay(15000);
-		
-	// 7. Reading The Temperature per-pixel
-		uint16_t Buff[2];
-		for(uint8_t i = 0; i < 128; i+=2){
-			
-			Buff[0]= 0x00;
-			Buff[1]= 0x00;
-			
-			for(uint8_t j = 0; j < 2; j++){
-				i2cBuf[0] = 0x80+i+j;
-				HAL_I2C_Master_Transmit(&hi2c2, deviceAddress, i2cBuf, 1, 10);
-				i2cBuf[1] = 0x00;
-				HAL_I2C_Master_Receive(&hi2c2, deviceAddress, &i2cBuf[1], 1, 10);
-				Buff[j] = (i2cBuf[1]);
-				
-			}
-		
-			Data[i/2] = (Buff[0] | Buff[1] << 8);
-		}
-		
-		
-		
-		
+	amg8833_setup();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		
-		for(uint8_t addios = 0; addios < 64; addios++){
-		
-		lcd16x2_i2c_clear();
-		lcd16x2_i2c_printf("T%d: 0X%x",addios, Data[addios]);
-		
-		
-		// Convert TO Float
-		float DataBuf = 0;
-		DataBuf = Data[addios]*0.25;
-		lcd16x2_i2c_setCursor(1,0);
-		lcd16x2_i2c_printf("Suhu:  %.2f", DataBuf);
-		HAL_Delay(500);
-		}
-		
-		
+		vec = amg8833_get_temp();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -287,7 +169,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.ClockSpeed = 400000;
   hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
