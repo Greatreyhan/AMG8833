@@ -9,12 +9,12 @@
 
 extern uint8_t AMG8833_ADDR;
 
-extern I2C_HandleTypeDef hi2c1;
+extern I2C_HandleTypeDef hi2c2;
 
 void amg8833_writeData(uint8_t reg, uint8_t data) {
   uint8_t txdata[2] = {reg, data};
   uint8_t status;
-  status = HAL_I2C_Master_Transmit(&hi2c1, AMG8833_ADDR,
+  status = HAL_I2C_Master_Transmit(&hi2c2, AMG8833_ADDR,
                                    txdata, sizeof(txdata), 10);
   if (status == HAL_OK) {
     return;
@@ -30,7 +30,7 @@ void amg8833_writeData(uint8_t reg, uint8_t data) {
     printf("Unknown status data %d", status);
   }
 
-  uint32_t error = HAL_I2C_GetError(&hi2c1);
+  uint32_t error = HAL_I2C_GetError(&hi2c2);
   if (error == HAL_I2C_ERROR_NONE) {
     return;
   } else if (error == HAL_I2C_ERROR_BERR) {
@@ -47,7 +47,7 @@ void amg8833_writeData(uint8_t reg, uint8_t data) {
     printf("HAL_I2C_ERROR_TIMEOUT\r\n");
   }
 
-  HAL_I2C_StateTypeDef state = HAL_I2C_GetState(&hi2c1);
+  HAL_I2C_StateTypeDef state = HAL_I2C_GetState(&hi2c2);
   if (state == HAL_I2C_STATE_RESET) {
     printf("HAL_I2C_STATE_RESET\r\n");
   } else if (state == HAL_I2C_STATE_READY) {
@@ -74,15 +74,15 @@ void amg8833_writeData(uint8_t reg, uint8_t data) {
 }
 
 void amg8833_readData(uint8_t reg, uint8_t *data, uint8_t len) {
-  HAL_I2C_Master_Transmit(&hi2c1, AMG8833_ADDR, &reg, 1,
+  HAL_I2C_Master_Transmit(&hi2c2, AMG8833_ADDR, &reg, 1,
                           100);
-  HAL_I2C_Master_Receive(&hi2c1, AMG8833_ADDR, data, len,
+  HAL_I2C_Master_Receive(&hi2c2, AMG8833_ADDR, data, len,
                          100);
 }
 
 void amg8833_setup(void){
 	for(uint8_t i = 0; i <255; i++){
-		if(HAL_I2C_IsDeviceReady(&hi2c1, i, 1, 10) == HAL_OK){
+		if(HAL_I2C_IsDeviceReady(&hi2c2, i, 1, 10) == HAL_OK){
 			AMG8833_ADDR = i;
 			break;
 		}

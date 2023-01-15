@@ -33,3 +33,5 @@ amg8833\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 amg8833\main.o: ../../AMG8833/AMG8833.h
 amg8833\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 amg8833\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+amg8833\main.o: ../../AMG8833/lcd16x2_i2c.h
+amg8833\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
