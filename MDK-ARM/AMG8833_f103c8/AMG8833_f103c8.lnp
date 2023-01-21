@@ -1,0 +1,25 @@
+--cpu Cortex-M3
+"amg8833_f103c8\startup_stm32f103xb.o"
+"amg8833_f103c8\amg8833.o"
+"amg8833_f103c8\main.o"
+"amg8833_f103c8\stm32f1xx_it.o"
+"amg8833_f103c8\stm32f1xx_hal_msp.o"
+"amg8833_f103c8\stm32f1xx_hal_gpio_ex.o"
+"amg8833_f103c8\stm32f1xx_hal_i2c.o"
+"amg8833_f103c8\stm32f1xx_hal.o"
+"amg8833_f103c8\stm32f1xx_hal_rcc.o"
+"amg8833_f103c8\stm32f1xx_hal_rcc_ex.o"
+"amg8833_f103c8\stm32f1xx_hal_gpio.o"
+"amg8833_f103c8\stm32f1xx_hal_dma.o"
+"amg8833_f103c8\stm32f1xx_hal_cortex.o"
+"amg8833_f103c8\stm32f1xx_hal_pwr.o"
+"amg8833_f103c8\stm32f1xx_hal_flash.o"
+"amg8833_f103c8\stm32f1xx_hal_flash_ex.o"
+"amg8833_f103c8\stm32f1xx_hal_exti.o"
+"amg8833_f103c8\stm32f1xx_hal_tim.o"
+"amg8833_f103c8\stm32f1xx_hal_tim_ex.o"
+"amg8833_f103c8\system_stm32f1xx.o"
+--strict --scatter "AMG8833_f103c8\AMG8833_f103c8.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "AMG8833_f103c8.map" -o AMG8833_f103c8\AMG8833_f103c8.axf
